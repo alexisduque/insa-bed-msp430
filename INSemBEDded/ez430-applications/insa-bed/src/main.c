@@ -1,8 +1,8 @@
 /**
  *  \file   main.c
- *  \brief  eZ430-RF2500 tutorial, adc10
- *  \author Antoine Fraboulet, Tanguy Risset, Dominique Tournier
- *  \date   2009
+ *  \brief  Insa BED Sink
+ *  \author Antoine Fraboulet, Tanguy Risset, Dominique Tournier, Alexis Duque
+ *  \date   2015
  **/
 
 #include <msp430f2274.h>
@@ -12,8 +12,6 @@
 #include <msp430.h>
 #include <iomacros.h>
 #elif defined(__IAR_SYSTEMS_ICC__)
-/* This is the IAR compiler */
-//#include <io430.h>
 #endif
 
 #include <stdio.h>
@@ -254,7 +252,7 @@ void radio_cb(uint8_t *buffer, int size, int8_t rssi)
 
                 memcpy(radio_rx_buffer, buffer, PKTLEN);
                 //FIXME what if radio_rx_flag == 1 already?
-		last_rssi = rssi;
+        last_rssi = rssi;
                 radio_rx_flag = 1;
             }
             else
@@ -283,57 +281,16 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt, radio_rx_flag == 1);
 
-        //dump_message(radio_rx_buffer);
-
-        /*if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_ID_REQUEST)
+        if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_TEMPERATURE)
         {
-            prompt_node_id();
+            unsigned int temperature;
+            char *pt = (char *) &temperature;
+            pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
+            pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
+
+            printf("node_id:%d:temp:%d.%d,rssi,%d,help,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
+              temperature / 10, temperature % 10, last_rssi, radio_rx_buffer[MSG_BYTE_HOPS]);
         }
-        else if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_ID_REPLY &&
-            !timer_reached(TIMER_ID_INPUT, ID_INPUT_TIMEOUT_TICKS))
-        {
-            set_node_id(radio_rx_buffer[MSG_BYTE_CONTENT]);
-        }
-         forward packet as it hasn't been processed on this node
-        else if(radio_rx_buffer[MSG_BYTE_HOPS] < MAX_HOPS)
-        {
-            /* prevent loops by not forwarding a packet
-             * if we are among the last hops 
-            int loop = 0;
-            unsigned int i;
-            for(i = MSG_BYTE_SRC_ROUTE; i < MSG_BYTE_SRC_ROUTE + radio_tx_buffer[MSG_BYTE_HOPS]; i++)
-            {
-                if(radio_tx_buffer[i] == node_id) {
-                    loop = 1;
-                }
-            }
-
-            if(loop == 0)
-            {
-                memcpy(radio_tx_buffer, radio_rx_buffer, PKTLEN);
-                radio_tx_buffer[MSG_BYTE_SRC_ROUTE + radio_tx_buffer[MSG_BYTE_HOPS]] = node_id;
-                radio_tx_buffer[MSG_BYTE_HOPS]++;
-
-                /* this is probably the ugliest MAC protocol ever made
-                 * (a packet send takes about 30 ms to complete, therefore
-                 * we wait 40 ms * node_id before forwarding a packet
-                 * to avoid collisions) 
-                TIMER_RADIO_FORWARD = 0;
-                PT_WAIT_UNTIL(pt, timer_reached(TIMER_RADIO_FORWARD, 4 * node_id));
-
-                radio_send_message();
-            }
-        }*/
-	if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_TEMPERATURE)
-    	{
-		unsigned int temperature;
-		char *pt = (char *) &temperature;
-		pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
-		pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
-
-
-		printf("node_id,%d,temperature,%d.%d,rssi,%d,help,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE], temperature / 10, temperature % 10, last_rssi, radio_rx_buffer[MSG_BYTE_HOPS]);
-    	}
         radio_rx_flag = 0;
     }
 
@@ -428,59 +385,6 @@ static PT_THREAD(thread_uart(struct pt *pt))
     PT_END(pt);
 }
 
-/*
- * Button
- */
-
-#define ANTIBOUNCING_DURATION 10 /* 10 timer counts = 100 ms */
-static int antibouncing_flag;
-static int button_pressed_flag;
-
-void button_pressed_cb()
-{
-    if(antibouncing_flag == 0)
-    {
-        button_pressed_flag = 1;
-        antibouncing_flag = 1;
-        TIMER_ANTIBOUNCING = 0;
-        led_green_blink(200); /* 200 timer ticks = 2 seconds */
-    }
-}
-
-static PT_THREAD(thread_button(struct pt *pt))
-{
-    PT_BEGIN(pt);
-
-    while(1)
-    {
-        PT_WAIT_UNTIL(pt, button_pressed_flag == 1);
-
-        TIMER_ID_INPUT = 0;
-
-        /* ask locally for a node id and broadcast an id request */
-        prompt_node_id();
-        send_id_request();
-
-        button_pressed_flag = 0;
-    }
-
-
-    PT_END(pt);
-}
-
-static PT_THREAD(thread_antibouncing(struct pt *pt))
-{
-    PT_BEGIN(pt);
-
-    while(1)
-    {
-        PT_WAIT_UNTIL(pt, antibouncing_flag
-          && timer_reached(TIMER_ANTIBOUNCING, ANTIBOUNCING_DURATION));
-        antibouncing_flag = 0;
-    }
-
-    PT_END(pt);
-}
 
 static PT_THREAD(thread_periodic_send(struct pt *pt))
 {
@@ -528,12 +432,6 @@ int main(void)
     timerA_register_cb(&timer_tick_cb);
     timerA_start_milliseconds(TIMER_PERIOD_MS);
 
-    /* button init */
-    button_init();
-    button_register_cb(button_pressed_cb);
-    antibouncing_flag = 0;
-    button_pressed_flag = 0;
-
     /* UART init (serial link) */
     uart_init(UART_9600_SMCLK_8MHZ);
     uart_register_cb(uart_cb);
@@ -553,7 +451,7 @@ int main(void)
 
     /* retrieve node id from flash */
     node_id = *((char *) NODE_ID_LOCATION);
-    //printf("node id retrieved from flash: %d\r\n", node_id);
+    printf("node id retrieved from flash: %d\r\n", node_id);
 
     button_enable_interrupt();
     __enable_interrupt();
@@ -562,10 +460,8 @@ int main(void)
     while(1) {
         /*thread_led_red(&pt[0]);
         thread_led_green(&pt[1]);
-        thread_uart(&pt[2]);
-        thread_antibouncing(&pt[3]);*/
+        thread_uart(&pt[2]);*/
         thread_process_msg(&pt[4]);
         thread_periodic_send(&pt[5]);
-        /*thread_button(&pt[6]);*/
     }
 }

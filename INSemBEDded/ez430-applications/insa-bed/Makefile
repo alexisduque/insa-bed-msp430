@@ -1,4 +1,4 @@
-PI_IP		= 192.168.0.14
+PI_IP		= 192.168.0.16
 NAME		= ez430-demo
 LIBS		= -lez430
 SRC		= main.c
@@ -24,12 +24,12 @@ download: all
 	mspdebug rf2500 "prog ${OUT_DIR}/${NAME}.elf"
 
 deploy_rx:
-	scp -r src pi@${PI_IP}:insa-bed/ez430-applications/demo
-	ssh  pi@${PI_IP} "cd insa-bed/ez430-applications/demo && make download SRC=main.c"
+	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/demo
+	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/demo && make download SRC=main.c"
 
 deploy_tx:
-	scp -r src pi@${PI_IP}:insa-bed/ez430-applications/demo
-	ssh  pi@${PI_IP} "cd insa-bed/ez430-applications/demo && make download SRC=transmitter.c"
+	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/demo
+	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/demo && make download SRC=transmitter.c"
 ${OUT_DIR}/${NAME}.elf: ${OBJ}
 	@mkdir -p ${OUT_DIR}
 	${CC} -mmcu=${CPU} ${OBJ} ${LDFLAGS} -o $@

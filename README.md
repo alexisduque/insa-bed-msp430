@@ -4,7 +4,7 @@ INSA BED Wireless Sensor Netework for MSP-430
 TI MSP-430 board code
 ------------------
 
-*Prerequisite:* use a Raspberry Pi, with a user "pi" and IP address 192.168.0.14, and a connected MSP-430 attached to the USB port. You should change these values in the Makefile, to fit your need.
+*Prerequisites:* use a Raspberry Pi, with a user "pi" and IP address 192.168.0.14, and a connected MSP-430 attached to the USB port. You should change these values in the Makefile, to fit your need.
 
 1. Put `INSemBEDded` folder into the Raspberry Pi, in `~/INSemBEDded/`.
 2. On the host machine, `cd INSemBEDded/ez430-applications/insa-bed/`
