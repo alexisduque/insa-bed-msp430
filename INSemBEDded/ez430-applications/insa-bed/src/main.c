@@ -40,14 +40,23 @@
 
 #define PKTLEN 7
 #define MAX_HOPS 3
-#define MSG_BYTE_TYPE 0U
 #define MSG_BYTE_HOPS 1U
-#define MSG_BYTE_SRC_ROUTE 2U
-#define MSG_BYTE_CONTENT (MAX_HOPS + 2)
+
 #define MSG_TYPE_ID_REQUEST 0x00
 #define MSG_TYPE_ID_REPLY 0x01
 #define MSG_TYPE_TEMPERATURE 0x02
 
+#define MSG_BYTE_TYPE 0U //First Byte is type of message
+#define MSG_BYTE_DEST_ROUTE 1U //Second Byte is dest id
+#define MSG_BYTE_SRC_ROUTE 2U // Third is source id
+#define MSG_BYTE_CONTENT 3U // Fourth is content
+
+#define PKTLEN 10 //Packet lenght
+
+// First Byte : Type of message
+#define MSG_TYPE_RTS 0x01
+#define MSG_TYPE_CTS 0x02
+#define MSG_TYPE_TEMPERATURE 0x03
 #define NODE_ID_LOCATION INFOD_START
 
 #define NODE_ID_UNDEFINED 0x00
@@ -288,7 +297,7 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
             pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
             pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
 
-            printf("node_id:%2d:temp:%d.%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
+            printf("node_id,%d,temp,%d.%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
               temperature / 10, temperature % 10);
         }
         radio_rx_flag = 0;
@@ -338,7 +347,7 @@ static void send_temperature()
     char *pt = (char *) &temperature;
     radio_tx_buffer[MSG_BYTE_CONTENT] = pt[1];
     radio_tx_buffer[MSG_BYTE_CONTENT + 1] = pt[0];
-    printf("node_id:%2d:temp:%d\r\n", node_id, temperature / 10);
+    printf("node_id,%d,temp,%d.%d\r\n", node_id, temperature / 10, temperature % 10);
     //radio_send_message();
 }
 
