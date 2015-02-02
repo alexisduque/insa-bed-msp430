@@ -38,13 +38,8 @@
 /* 100 Hz timer A */
 #define TIMER_PERIOD_MS 10
 
-#define PKTLEN 7
 #define MAX_HOPS 3
 #define MSG_BYTE_HOPS 1U
-
-#define MSG_TYPE_ID_REQUEST 0x00
-#define MSG_TYPE_ID_REPLY 0x01
-#define MSG_TYPE_TEMPERATURE 0x02
 
 #define MSG_BYTE_TYPE 0U //First Byte is type of message
 #define MSG_BYTE_DEST_ROUTE 1U //Second Byte is dest id
@@ -91,34 +86,19 @@ static void dump_message(char *buffer)
     printf("\r\n  type: ");
     switch(buffer[MSG_BYTE_TYPE])
     {
-        case MSG_TYPE_ID_REQUEST:
-            printf("id request");
+        case MSG_TYPE_CTS:
+            printf("CTS");
             break;
-        case MSG_TYPE_ID_REPLY:
-            printf("id reply");
+        case MSG_TYPE_RTS:
+            printf("RTS");
             break;
         case MSG_TYPE_TEMPERATURE:
             printf("temperature");
             break;
     }
-    printf("\r\n  num hops: %d\r\n", buffer[MSG_BYTE_HOPS]);
-    printf("  route: ");
-    unsigned int i;
-    for(i = MSG_BYTE_SRC_ROUTE; i < MSG_BYTE_SRC_ROUTE + buffer[MSG_BYTE_HOPS]; i++)
-    {
-        if(buffer[i] == 0x00)
-        {
-            printf("undefined");
-        }
-        else
-        {
-            printf("%02X", buffer[i]);
-        }
-        if(i < MSG_BYTE_SRC_ROUTE + buffer[MSG_BYTE_HOPS])
-        {
-            printf("->");
-        }
-    }
+
+    printf("\r\n  source : %d\r\n", buffer[MSG_BYTE_SRC_ROUTE]);
+    printf("  destination: %d\r\n", buffer[MSG_BYTE_DEST_ROUTE]);
     printf("%02X\r\n", node_id);
 
     if(buffer[MSG_BYTE_TYPE] == MSG_TYPE_TEMPERATURE)
@@ -229,6 +209,7 @@ static PT_THREAD(thread_led_red(struct pt *pt))
 static char radio_tx_buffer[PKTLEN];
 static char radio_rx_buffer[PKTLEN];
 static int radio_rx_flag;
+static int clear_to_send_flag;
 int8_t last_rssi;
 
 void radio_cb(uint8_t *buffer, int size, int8_t rssi)
@@ -261,7 +242,7 @@ void radio_cb(uint8_t *buffer, int size, int8_t rssi)
 
                 memcpy(radio_rx_buffer, buffer, PKTLEN);
                 //FIXME what if radio_rx_flag == 1 already?
-        last_rssi = rssi;
+                last_rssi = rssi;
                 radio_rx_flag = 1;
             }
             else
@@ -282,6 +263,28 @@ static void radio_send_message()
     cc2500_rx_enter();
 }
 
+/* to be called from within a protothread */
+static void init_message()
+{
+    unsigned int i;
+    for(i = 0; i < PKTLEN; i++)
+    {
+        radio_tx_buffer[i] = 0x00;
+    }
+    radio_tx_buffer[MSG_BYTE_HOPS] = 0x01;
+    radio_tx_buffer[MSG_BYTE_SRC_ROUTE] = node_id;
+}
+
+/* to be called from within a protothread */
+static void send_cts(uint8_t dest)
+{
+    led_green_blink(10);
+    init_message();
+    radio_tx_buffer[MSG_BYTE_TYPE] = MSG_TYPE_CTS;
+    radio_tx_buffer[MSG_BYTE_DEST_ROUTE] = dest;
+    radio_send_message();
+}
+
 static PT_THREAD(thread_process_msg(struct pt *pt))
 {
     PT_BEGIN(pt);
@@ -299,6 +302,21 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
 
             printf("node_id,%d,temp,%d.%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
               temperature / 10, temperature % 10);
+
+        }
+        else if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_RTS)
+        {
+            if (clear_to_send_flag = 1)
+            {
+            printf("RTS message received from %d\n",radio_rx_buffer[MSG_BYTE_SRC_ROUTE]);
+            send_cts(radio_rx_buffer[MSG_BYTE_SRC_ROUTE]);
+            clear_to_send_flag = 0;
+            //timer cts = 0;
+            }
+            else
+            {
+                clear_to_send_flag = 1;
+            }
         }
         radio_rx_flag = 0;
     }
@@ -322,78 +340,17 @@ int uart_cb(uint8_t data)
 }
 
 /* to be called from within a protothread */
-static void init_message()
-{
-    unsigned int i;
-    for(i = 0; i < PKTLEN; i++)
-    {
-        radio_tx_buffer[i] = 0x00;
-    }
-    radio_tx_buffer[MSG_BYTE_HOPS] = 0x01;
-    radio_tx_buffer[MSG_BYTE_SRC_ROUTE] = node_id;
-}
-
-/* to be called from within a protothread */
 static void send_temperature()
 {
     init_message();
     radio_tx_buffer[MSG_BYTE_TYPE] = MSG_TYPE_TEMPERATURE;
     int temperature = adc10_sample_temp();
-    /*printf("temperature: %d, hex: ", temperature);
-    printhex((char *) &temperature, 2);
-    putchar('\r');
-    putchar('\n');*/
-    /* msp430 is little endian, convert temperature to network order */
     char *pt = (char *) &temperature;
     radio_tx_buffer[MSG_BYTE_CONTENT] = pt[1];
     radio_tx_buffer[MSG_BYTE_CONTENT + 1] = pt[0];
     printf("node_id,%d,temp,%d.%d\r\n", node_id, temperature / 10, temperature % 10);
     //radio_send_message();
 }
-
-static void send_id_request()
-{
-    init_message();
-    radio_tx_buffer[MSG_BYTE_TYPE] = MSG_TYPE_ID_REQUEST;
-    radio_send_message();
-}
-
-
-static void send_id_reply(unsigned char id)
-{
-    init_message();
-    radio_tx_buffer[MSG_BYTE_TYPE] = MSG_TYPE_ID_REPLY;
-    radio_tx_buffer[MSG_BYTE_CONTENT] = id;
-    radio_send_message();
-    printf("ID 0x%02X sent\r\n", id);
-}
-
-static PT_THREAD(thread_uart(struct pt *pt))
-{
-    PT_BEGIN(pt);
-
-    while(1)
-    {
-        PT_WAIT_UNTIL(pt, uart_flag);
-
-        led_green_blink(10); /* 10 timer ticks = 100 ms */
-
-        /* does the local node expects an id
-         * or do we have to broadcast it? */
-        if(timer_reached(TIMER_ID_INPUT, ID_INPUT_TIMEOUT_TICKS))
-        {
-            send_id_reply(uart_data);
-        }
-        else
-        {
-            set_node_id(uart_data);
-        }
-        uart_flag = 0;
-    }
-
-    PT_END(pt);
-}
-
 
 static PT_THREAD(thread_periodic_send(struct pt *pt))
 {
@@ -447,6 +404,8 @@ int main(void)
     uart_flag = 0;
     uart_data = 0;
 
+    printf("Smart GreenHouses: Sink\n\r");
+
     /* ADC10 init (temperature) */
     adc10_start();
 
@@ -457,6 +416,7 @@ int main(void)
     cc2500_rx_register_cb(radio_cb);
     cc2500_rx_enter();
     radio_rx_flag = 0;
+    clear_to_send_flag = 1;
 
     /* retrieve node id from flash */
     node_id = *((char *) NODE_ID_LOCATION);
@@ -468,8 +428,8 @@ int main(void)
     /* simple cycle scheduling */
     while(1) {
         /*thread_led_red(&pt[0]);
-        thread_led_green(&pt[1]);
         thread_uart(&pt[2]);*/
+        thread_led_green(&pt[1]);
         thread_process_msg(&pt[4]);
         thread_periodic_send(&pt[5]);
     }
