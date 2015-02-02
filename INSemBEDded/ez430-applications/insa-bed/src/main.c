@@ -288,8 +288,8 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
             pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
             pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
 
-            printf("node_id:%d:temp:%d.%d,rssi,%d,help,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
-              temperature / 10, temperature % 10, last_rssi, radio_rx_buffer[MSG_BYTE_HOPS]);
+            printf("node_id:%2d:temp:%d.%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
+              temperature / 10, temperature % 10);
         }
         radio_rx_flag = 0;
     }
@@ -338,7 +338,7 @@ static void send_temperature()
     char *pt = (char *) &temperature;
     radio_tx_buffer[MSG_BYTE_CONTENT] = pt[1];
     radio_tx_buffer[MSG_BYTE_CONTENT + 1] = pt[0];
-    printf("node_id,%d,temperature,%d.%d,rssi,%d,help,%d\r\n", node_id, temperature / 10, temperature % 10, 0, 0);
+    printf("node_id:%2d:temp:%d\r\n", node_id, temperature / 10);
     //radio_send_message();
 }
 
@@ -451,7 +451,7 @@ int main(void)
 
     /* retrieve node id from flash */
     node_id = *((char *) NODE_ID_LOCATION);
-    printf("node id retrieved from flash: %d\r\n", node_id);
+    //printf("node id retrieved from flash: %d\r\n", node_id);
 
     button_enable_interrupt();
     __enable_interrupt();

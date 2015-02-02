@@ -1,0 +1,229 @@
+/*
+ * -- BASE STYLES --
+ * Most of these are inherited from Base, but I want to change a few.
+ */
+body {
+    color: #f2f2f2;
+    background-color: #f2f2f2;
+}
+
+h2, h3 {
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+p {
+    line-height: 1.6em;
+}
+
+
+/*
+ * -- Layout Styles --
+ */
+.l-content {
+    margin: 0 auto;
+}
+
+.l-box {
+    padding: 0.5em 2em;
+}
+
+/*
+ * -- MENU STYLES --
+ * Make the menu have a very faint box-shadow.
+ */
+.pure-menu {
+    box-shadow: 0 1px 1px rgba(0,0,0, 0.10);
+}
+
+
+/*
+ * -- BANNER --
+ * The top banner with the headings. By using a combination
+ * of `display: table;` and `display: table-cell;`, we can
+ * vertically center the text.
+ */
+
+.banner {
+    background: transparent url('../greenhouse.jpg') 0 0 no-repeat fixed;
+    text-align: center;
+    background-size: cover;
+    filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='../greenhouse.jpg', sizingMethod='scale');
+
+    height: 300px;
+    width: 100%;
+    margin-bottom: 3em;
+    display: table;
+}
+
+    .banner-head {
+        display: table-cell;
+        vertical-align: middle;
+        margin-bottom: 0    ;
+        font-size: 2em;
+        color: white;
+        font-weight: 500;
+        text-shadow: 0 1px 1px black;
+    }
+
+
+
+/*
+ * -- BED TABLE WRAPPER --
+ * This element wraps up all the bed table elements
+ */
+ .bed-tables,
+ .information {
+    max-width: 980px;
+    margin: 0 auto;
+ }
+.bed-tables {
+    margin-bottom: 3.125em;
+    text-align: center;
+}
+
+/*
+ * -- BED TABLE  --
+ * Every bed table has the .bed-table class
+ */
+.bed-table {
+    border: 1px solid #ddd;
+    margin: 0 0.5em 2em;
+    padding: 0 0 1em;
+    background: #fff;
+}
+
+/*
+ * -- BED TABLE HEADER COLORS --
+ * Choose a different color based on the type of bed table.
+ */
+.bed-table-free .bed-table-header {
+    background: #519251;
+}
+
+.bed-table-biz .bed-table-header {
+    background: #2c4985;
+}
+
+/*
+ * -- BED TABLE HEADER --
+ * By default, a header is black/white, and has some styles for its <h2> name.
+ */
+.bed-table-header {
+    background: #111;
+    color: #fff;
+}
+    .bed-table-header h2 {
+        margin: 0;
+        padding-top: 1em;
+        padding-bottom: 1em;
+        font-size: 1em;
+        font-weight: normal;
+
+    }
+
+
+/*
+ * -- BED TABLE PRICE --
+ * Styles for the price and the corresponding <span>per month</span>
+ */
+.bed-table-price {
+    font-size: 6em;
+    margin: 0.2em 0 0;
+    font-weight: 100;
+}
+    .bed-table-price span {
+        display: block;
+        text-transform: uppercase;
+        font-size: 0.2em;
+        padding-bottom: 2em;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.5);
+        *color: #fff;
+    }
+
+
+
+/*
+ * -- BED TABLE LIST --
+ * Each bed table has a <ul> which is denoted by the .bed-table-list class
+ */
+.bed-table-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+
+/*
+ * -- BED TABLE LIST ELEMENTS --
+ * Styles for the individual list elements within each bed table
+ */
+.bed-table-list li {
+    padding: 0.8em 0;
+    background: #f7f7f7;
+    border-bottom: 1px solid #e7e7e7;
+}
+
+
+/*
+ * -- BED TABLE BUTTON --
+ * Styles for the "Choose" button at the bottom of a bed table.
+ * This inherits from Pure Button.
+ */
+.button-choose {
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+    border-radius: 2em;
+    font-weight: bold;
+    position: relative;
+    bottom: -1.5em;
+}
+
+.information-head {
+    color: black;
+    font-weight: 500;
+}
+
+.footer {
+    background: #111;
+    color: #888;
+    text-align: center;
+}
+    .footer a {
+        color: #ddd;
+    }
+
+
+
+/*
+ * -- TABLET MEDIA QUERIES --
+ * On tablets, we want to slightly adjust the size of the banner
+ * text and add some vertical space between the various bed tables
+ */
+@media(min-width: 767px) {
+
+    .banner-head {
+        font-size: 4em;
+    }
+    .bed-table {
+        margin-bottom: 0;
+    }
+
+}
+
+/*
+ * -- PHONE MEDIA QUERIES --
+ * On phones, we want to reduce the height and font-size of the banner further
+ */
+@media (min-width: 480px) {
+    .banner {
+        height: 300px;
+    }
+    .banner-head {
+        font-size: 3em;
+    }
+}

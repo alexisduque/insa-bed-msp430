@@ -24,12 +24,12 @@ download: all
 	mspdebug rf2500 "prog ${OUT_DIR}/${NAME}.elf"
 
 deploy_rx:
-	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/demo
-	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/demo && make download SRC=main.c"
+	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/insa-bed
+	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/insa-bed && make download SRC=main.c"
 
 deploy_tx:
-	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/demo
-	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/demo && make download SRC=transmitter.c"
+	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/insa-bed
+	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/insa-bed && make download SRC=transmitter.c"
 
 ${OUT_DIR}/${NAME}.elf: ${OBJ}
 	@mkdir -p ${OUT_DIR}
