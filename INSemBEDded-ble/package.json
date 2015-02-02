@@ -1,0 +1,18 @@
+{
+  "name": "INSemBEDded",
+  "version": "1.0.0",
+  "description": "This is an example program demonstrating BLE connectivity between a peripheral running bleno, and a central, a mobile phone.",
+  "main": "peripheral.js",
+  "dependencies": {
+    "pi-gpio": "^0.0.6",
+    "bleno": "^0.1.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexisduque/rtone-contrib-masterBleSimulator.git"
+  }
+}
