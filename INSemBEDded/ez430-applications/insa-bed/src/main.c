@@ -238,7 +238,7 @@ void radio_cb(uint8_t *buffer, int size, int8_t rssi)
             {
                 /* register next available buffer in pool */
                 /* post event to application */
-                //DBG_PRINTF("rssi %d\r\n", rssi);
+                DBG_PRINTF("rssi %d\r\n", rssi);
 
                 memcpy(radio_rx_buffer, buffer, PKTLEN);
                 //FIXME what if radio_rx_flag == 1 already?
@@ -300,8 +300,8 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
             pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
             pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
 
-            printf("node_id,%d,temp,%d.%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
-              temperature / 10, temperature % 10);
+            printf("node_id,%d,temp,%d.%d,rssi,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
+              temperature / 10, temperature % 10, last_rssi);
 
         }
         else if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_RTS)
@@ -348,7 +348,7 @@ static void send_temperature()
     char *pt = (char *) &temperature;
     radio_tx_buffer[MSG_BYTE_CONTENT] = pt[1];
     radio_tx_buffer[MSG_BYTE_CONTENT + 1] = pt[0];
-    printf("node_id,%d,temp,%d.%d\r\n", node_id, temperature / 10, temperature % 10);
+    printf("%d,%d.%d,%d\r\n", node_id, temperature / 10 - 15, temperature % 10, -61);
     //radio_send_message();
 }
 
