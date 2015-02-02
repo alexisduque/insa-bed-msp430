@@ -30,6 +30,7 @@ deploy_rx:
 deploy_tx:
 	scp -r src pi@${PI_IP}:insa-bed-msp430/INSemBEDded/ez430-applications/demo
 	ssh  pi@${PI_IP} "cd insa-bed-msp430/INSemBEDded/ez430-applications/demo && make download SRC=transmitter.c"
+
 ${OUT_DIR}/${NAME}.elf: ${OBJ}
 	@mkdir -p ${OUT_DIR}
 	${CC} -mmcu=${CPU} ${OBJ} ${LDFLAGS} -o $@
