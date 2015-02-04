@@ -132,7 +132,7 @@ static void set_node_id(unsigned char id)
 
 /* Protothread contexts */
 
-#define NUM_PT 7
+#define NUM_PT 3
 static struct pt pt[NUM_PT];
 
 
@@ -236,9 +236,7 @@ void radio_cb(uint8_t *buffer, int size, int8_t rssi)
         default:
             if (size > 0)
             {
-                /* register next available buffer in pool */
-                /* post event to application */
-                DBG_PRINTF("rssi %d\r\n", rssi);
+                //DBG_PRINTF("rssi %d\r\n", rssi);
 
                 memcpy(radio_rx_buffer, buffer, PKTLEN);
                 //FIXME what if radio_rx_flag == 1 already?
@@ -282,6 +280,7 @@ static void send_cts(uint8_t dest)
     init_message();
     radio_tx_buffer[MSG_BYTE_TYPE] = MSG_TYPE_CTS;
     radio_tx_buffer[MSG_BYTE_DEST_ROUTE] = dest;
+    dump_message(radio_tx_buffer);
     radio_send_message();
 }
 
@@ -292,7 +291,7 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
     while(1)
     {
         PT_WAIT_UNTIL(pt, radio_rx_flag == 1);
-
+        //dump_message(radio_rx_buffer);
         if(radio_rx_buffer[MSG_BYTE_TYPE] == MSG_TYPE_TEMPERATURE)
         {
             unsigned int temperature;
@@ -300,7 +299,7 @@ static PT_THREAD(thread_process_msg(struct pt *pt))
             pt[0] = radio_rx_buffer[MSG_BYTE_CONTENT + 1];
             pt[1] = radio_rx_buffer[MSG_BYTE_CONTENT];
 
-            printf("node_id,%d,temp,%d.%d,rssi,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
+            printf("%d,%d.%d,%d\r\n", (unsigned char) radio_rx_buffer[MSG_BYTE_SRC_ROUTE],
               temperature / 10, temperature % 10, last_rssi);
 
         }
@@ -348,7 +347,7 @@ static void send_temperature()
     char *pt = (char *) &temperature;
     radio_tx_buffer[MSG_BYTE_CONTENT] = pt[1];
     radio_tx_buffer[MSG_BYTE_CONTENT + 1] = pt[0];
-    printf("%d,%d.%d,%d\r\n", node_id, temperature / 10 - 15, temperature % 10, -61);
+    printf("%d,%d.%d,%d\r\n", node_id, temperature / 10 - 15, temperature % 10, -10);
     //radio_send_message();
 }
 
@@ -431,6 +430,6 @@ int main(void)
         thread_uart(&pt[2]);*/
         thread_led_green(&pt[1]);
         thread_process_msg(&pt[4]);
-        thread_periodic_send(&pt[5]);
+        //thread_periodic_send(&pt[5]);
     }
 }

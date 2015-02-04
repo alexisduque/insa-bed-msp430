@@ -2,7 +2,7 @@ var stream = require('stream');
 var express = require('express');
 var csv = require('csv');
 var math = require('mathjs');
-//var gpio = require('pi-gpio');
+var gpio = require('pi-gpio');
 var mean = [];
 
 function processMean(temp) {
@@ -28,13 +28,11 @@ gpio.open(gpioPin, "output", function(err) {
 durationId = setTimeout(function() {
   clearInterval(intervalId);
   clearTimeout(durationId);
-  console.log('10 seconds blinking completed');
+  console.log('100 seconds blinking completed');
   gpio.write(gpioPin, 0, function() {
    gpio.close(gpioPin)
    });
 }, 100000);
-
-
 
 // Webserver
 var app = express();
@@ -52,7 +50,19 @@ csvStream.transform(function(row) {
   row.node_id = parseInt(row.node_id);
   row.temp = parseFloat(row.temp);
   row.rssi = parseInt(row.rssi);
-  row.mean = processMean(row.temp);
+  row.mean = processMean(row.temp);²
+  if (row.mean > 20) {
+    gpio.write(16, 0, function() {
+    });
+  } else {
+    gpio.write(16, 1, function() {
+      console.log('Temperature is low !!');
+    });
+  }
+  io.sockets.emit('message', row);
+  return null;
+});
+
   io.sockets.emit('message', row);
   return null;
 });

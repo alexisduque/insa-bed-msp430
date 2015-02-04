@@ -1,3 +1,4 @@
+
 /**
  *  \file   main.c
  *  \brief  eZ430-RF2500 tutorial, adc10
@@ -49,7 +50,12 @@ static int button_pressed_flag;
 #define MSG_BYTE_CONTENT (MAX_HOPS + 2)
 #define MSG_TYPE_ID_REQUEST 0x00
 #define MSG_TYPE_ID_REPLY 0x01
-#define MSG_TYPE_TEMPERATURE 0x02
+#define MSG_TYPE_TEMPERATURE 0x03
+
+#define MSG_BYTE_TYPE 0U //First Byte is type of message
+#define MSG_BYTE_DEST_ROUTE 1U //Second Byte is dest id
+#define MSG_BYTE_SRC_ROUTE 2U // Third is source id
+#define MSG_BYTE_CONTENT 3U // Fourth is content
 
 #define NODE_ID_LOCATION INFOD_START
 
@@ -549,7 +555,7 @@ int main(void)
     radio_rx_flag = 0;
 
     /* retrieve node id from flash */
-    set_node_id(1);
+    set_node_id(9);
     node_id = *((char *) NODE_ID_LOCATION);
     printf("node id retrieved from flash: %d\r\n", node_id);
 
