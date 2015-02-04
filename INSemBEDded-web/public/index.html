@@ -52,6 +52,16 @@
         <div class="pure-u-1 pure-u-md-1-1">
             <div class="bed-table bed-table-free">
                 <div class="bed-table-header">
+                    <h2>Mean Temperature graph</h2>
+                </div>
+                    <p><br>
+                   <canvas id="temperatureM" width="800" height="200"></canvas>
+                   </p>
+            </div>
+        </div>
+        <div class="pure-u-1 pure-u-md-1-1">
+            <div class="bed-table bed-table-free">
+                <div class="bed-table-header">
                     <h2>Radar</h2>
                 </div><br>
                    <div id="radar" style="float: center"></div>
@@ -94,6 +104,23 @@
 		}
 		lines[msg.node_id].append(new Date().getTime(), msg.temp);
 	}
+
+  // Mean Temperature graph
+  var smoothieM = new SmoothieChart({
+    millisPerPixel: 100
+  });
+  smoothieM.streamTo(document.getElementById("temperatureM"));
+  var linesM = {};
+  function draw_temperaturesM (msg) {
+    if (!linesM[0]) {
+      linesM[0] = new TimeSeries();
+      smoothieM.addTimeSeries(linesM[0], {
+        lineWidth: 5,
+        strokeStyle: 'rgb(' + parseInt(Math.random() * 255) + ',' + parseInt(Math.random() * 255) + ',' + parseInt(Math.random() * 255) + ')'
+      });
+    }
+    linesM[0].append(new Date().getTime(), msg.mean);
+  }
 	
 	// Radar graph
 	// Note: this is an ugly use of a radar char.
@@ -139,8 +166,8 @@
 		var timeout;
 		socket.on('message', function (msg) {
 			draw_temperatures(msg);
+      draw_temperaturesM(msg);
 			draw_radar(msg);
-			draw_helpdesk(msg);
 		});
 </script>
 

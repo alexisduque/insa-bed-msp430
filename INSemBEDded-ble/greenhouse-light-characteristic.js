@@ -1,6 +1,7 @@
 var util = require('util');
 var bleno = require('bleno');
 var greenhouse = require('./greenhouse');
+var gpio = require('pi-gpio');
 
 function GreenhouseLightCharacteristic(greenhouse) {
   bleno.Characteristic.call(this, {
@@ -30,9 +31,21 @@ GreenhouseLightCharacteristic.prototype.onWriteRequest = function(data, offset, 
   }
   else {
     var command = data.readUInt8(0);
-    console.log("Light Writted Value = " + command);
-        this.greenhouse.light != this.greenhouse.light;
-        callback(this.RESULT_SUCCESS);
+    console.log('Light Writted Value = ' + command);
+      gpio.read(16, function(err, value) {
+        if (err) throw err;
+        if (value === 0) {
+        console.log('GPIO off');
+          gpio.write(16, 1, function() {
+          });
+        } else {
+          console.log('GPIO is on');
+          gpio.write(16, 0, function() {
+          });
+        }
+      });
+    //this.greenhouse.light != this.greenhouse.light;
+    callback(this.RESULT_SUCCESS);
   }
 };
 
@@ -46,14 +59,5 @@ GreenhouseLightCharacteristic.prototype.onReadRequest = function(offset, callbac
     callback(this.RESULT_SUCCESS, data);
   }
 };
-
-GreenhouseAccelCharacteristic.prototype.onSubscribe = function(maxValueSize, callback) {
-    setInterval(function() {
-      callback(new Buffer(new U8intArray([140, 140, 140])));
-    }, 1500);
-    setInterval(function() {
-      callback(new Buffer(new U8intArray([10, 150, 140])));
-    }, 2500);
-  }
 
 module.exports = GreenhouseLightCharacteristic;
